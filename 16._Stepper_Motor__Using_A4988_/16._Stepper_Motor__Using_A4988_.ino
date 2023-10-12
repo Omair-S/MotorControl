@@ -1,6 +1,7 @@
 //Stepper motor (Using A4988 Driver)
 /*
 Overview of A4988 Driver pins:
+This is Sufiyans version of this file
 V_MOT: Supply voltage for motor. Input voltage 8V - 35V.
 GND : Ground pin for VMOT.
 A 100μF capacitor should be connected in parallel with the GND and VMOT to reduce noise.
