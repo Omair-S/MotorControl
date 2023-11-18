@@ -45,9 +45,29 @@ will be ignored.
 #define MS1_pin 7
 #define L_en_pin 8
 
+
+//JOYSTICK CONTROLL INPUTS
+#define X_axis A0
+#define Y_axis A1
+#define SW A3
+
+
+
 int x=0;
 double D=1000;
+int Direction = 1;
+int joyPosVertical = 512;
+int joyPosHorizontal = 512;
 
+//write a function to find the percentage change in the joystick
+
+bool determine_direction(int x){
+  bool output = false;
+  if(x > 512){
+    output = true;
+  }
+  return output;
+}
 
 void setup()
 {
@@ -59,15 +79,24 @@ void setup()
   pinMode(MS1_pin, OUTPUT);
   pinMode(L_en_pin, OUTPUT);
   
-  Serial.begin(9600);
+  
+  //  setup the joystick for input
+  pinMode(SW, INPUT);
+  
 
   digitalWrite(L_en_pin, LOW);
   digitalWrite(L_sleep_pin, HIGH);
   
-  digitalWrite(MS3_pin, HIGH);
+  digitalWrite(MS3_pin, LOW);
   digitalWrite(MS2_pin, LOW);
-  digitalWrite(MS1_pin, HIGH);
-  digitalWrite(dir_pin, HIGH);
+  digitalWrite(MS1_pin, LOW);
+
+  // joystick write
+  digitalWrite(SW,HIGH);     
+
+
+
+  Serial.begin(9600);
 }
 
 void loop()
@@ -76,4 +105,21 @@ void loop()
   delayMicroseconds(D);
   digitalWrite(step_pin,LOW);
   delayMicroseconds(D);
+  
+  // saving the verticle and horizontal positions
+  joyPosHorizontal = analogRead(X_axis);
+  joyPosVertical = analogRead(Y_axis); 
+  Direction = determine_direction(joyPosHorizontal);
+  digitalWrite(dir_pin,Direction);
+   
+  //  printing the joystick values to the terminal  
+//  Serial.print("X-axis: ");
+//  Serial.print(analogRead(X_axis));
+//  Serial.print(" : ");
+//  Serial.print("Y-axis: ");
+//  Serial.print(analogRead(Y_axis));
+//  Serial.print(" : ");
+//  Serial.print("Switch:  ");
+//  Serial.println(digitalRead(SW));
+//  delay(200);
 }
