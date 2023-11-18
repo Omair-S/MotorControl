@@ -37,41 +37,43 @@ used when motor is not in use.
 RESET : Sets the translator to a predefined home state (intial state). If set to low, all input steps
 will be ignored.
 */
+#define dir_pin 2
+#define step_pin 3
+#define L_sleep_pin 4
+#define MS3_pin 5
+#define MS2_pin 6
+#define MS1_pin 7
+#define L_en_pin 8
 
-int s=3; //step pin
-int d=4; //direction pin
-int X; //analog value on X-axis
-int S; //switch state
-int x;
-int D;
-void setup() {
-  pinMode(s,OUTPUT);
-  pinMode(d,OUTPUT);
-  pinMode(A0,INPUT);
-  pinMode(2,INPUT);
+int x=0;
+double D=1000;
+
+
+void setup()
+{
+  pinMode(dir_pin, OUTPUT);
+  pinMode(step_pin, OUTPUT);
+  pinMode(L_sleep_pin, OUTPUT);
+  pinMode(MS3_pin, OUTPUT);
+  pinMode(MS2_pin, OUTPUT);
+  pinMode(MS1_pin, OUTPUT);
+  pinMode(L_en_pin, OUTPUT);
+  
   Serial.begin(9600);
-  digitalWrite(2,HIGH);
+
+  digitalWrite(L_en_pin, LOW);
+  digitalWrite(L_sleep_pin, HIGH);
+  
+  digitalWrite(MS3_pin, HIGH);
+  digitalWrite(MS2_pin, LOW);
+  digitalWrite(MS1_pin, HIGH);
+  digitalWrite(dir_pin, HIGH);
 }
 
-void loop() {
-  X=analogRead(A0);
-  S=digitalRead(2);
-  if(X>512)
-  digitalWrite(d,HIGH); //sets motor direction clockwise
-  if(X<512)
-  digitalWrite(d,LOW); //sets motor direction anti-clockwise
-  else {
-    digitalWrite(s,LOW);
-  }
-  x=abs(X-512);
-  D=(-2125.*x/256.)+5000.;
-  if(S==1)
-    for(int i=0;i<10;i++)
-    {
-    digitalWrite(s,HIGH);
-    delayMicroseconds(D);
-    digitalWrite(s,LOW);
-    delayMicroseconds(D);
-    }
-  Serial.println(x);
+void loop()
+{
+  digitalWrite(step_pin,HIGH);
+  delayMicroseconds(D);
+  digitalWrite(step_pin,LOW);
+  delayMicroseconds(D);
 }
