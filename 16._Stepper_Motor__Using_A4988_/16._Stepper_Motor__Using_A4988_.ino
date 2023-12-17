@@ -28,6 +28,10 @@ according to the following table:
     |  Low  | High  |  Low  |     Quarter Step       |
     | High  | High  |  Low  |      Eighth Step       |
     | High  | High  | High  |    Sixteenth Step      |
+    | High  |  Low  | High  |       1/32 Step        |
+    |  low  | High  | High  |       1/64 Step        |
+    |  Low  }  Low  | High  |       1/128 Step       |
+     ________________________________________________
 
 Power state control pins include ENABLE, SLEEP and RESET pins.
 ENABLE: Used to enable the driver. Pulling it high disables the driver and pulling it low enables the
@@ -45,9 +49,80 @@ will be ignored.
 #define MS1_pin 7
 #define L_en_pin 8
 
+
+//JOYSTICK CONTROLL INPUTS
+#define X_axis A0
+#define Y_axis A1
+#define SW A3
+
 int x=0;
 double D=1000;
+int Direction = 1;
+int joyPosVertical = 512;
+int joyPosHorizontal = 512;
+bool MS_config[3] = {LOW,LOW,LOW};
 
+// Function to determine the percentage change in joystick position
+int calculatePercentageChange(int currentPosition, int initialPosition) {
+  int temp = ((int)(currentPosition - initialPosition) / 1023.0) * 100.0;
+  if(temp < 0){
+    temp = -1*temp;
+  }
+  return temp;
+}
+
+//determine the direction in which the stepper motor will move
+bool determine_direction(int x){
+  bool output = false;
+  if(x > 512){
+    output = true;
+  }
+  return output;
+}
+
+// determine how fast the motor will move in a direction
+int speedControl(int percentage_change){
+  int x = map(percentage_change, 0,50,0,8);
+  
+  digitalWrite(MS1_pin, MS_config[0]);
+  digitalWrite(MS2_pin, MS_config[1]);
+  digitalWrite(MS3_pin, MS_config[2]);
+  switch(x){    
+    case 1:
+      MS_config[0] = HIGH;
+      MS_config[1] = LOW;
+      MS_config[2] = HIGH;
+      break;
+    case 3:
+      MS_config[0] = HIGH;
+      MS_config[1] = HIGH;
+      MS_config[2] = HIGH;
+      break;
+    case 4:
+      MS_config[0] = HIGH;
+      MS_config[1] = HIGH;
+      MS_config[2] = LOW;
+      break;
+    case 5:
+      MS_config[0] = LOW;
+      MS_config[1] = HIGH;
+      MS_config[2] = LOW;
+      break;
+    case 6:
+      MS_config[0] = HIGH;
+      MS_config[1] = LOW;
+      MS_config[2] = LOW;
+      break;
+    case 7:
+      MS_config[0] = LOW;
+      MS_config[1] = LOW;
+      MS_config[2] = LOW;
+      break;
+    default:
+      break;
+  }
+  return x;
+}
 
 void setup()
 {
@@ -59,21 +134,41 @@ void setup()
   pinMode(MS1_pin, OUTPUT);
   pinMode(L_en_pin, OUTPUT);
   
-  Serial.begin(9600);
-
+  //  setup the joystick for input
+  pinMode(SW, INPUT);
+  
   digitalWrite(L_en_pin, LOW);
   digitalWrite(L_sleep_pin, HIGH);
   
-  digitalWrite(MS3_pin, HIGH);
-  digitalWrite(MS2_pin, LOW);
-  digitalWrite(MS1_pin, HIGH);
-  digitalWrite(dir_pin, HIGH);
+  // joystick write
+  digitalWrite(SW,HIGH);     
+  Serial.begin(9600);
 }
 
 void loop()
 {
-  digitalWrite(step_pin,HIGH);
-  delayMicroseconds(D);
-  digitalWrite(step_pin,LOW);
-  delayMicroseconds(D);
+  // saving the verticle and horizontal positions
+  joyPosHorizontal = analogRead(X_axis);
+  joyPosVertical = analogRead(Y_axis); 
+  Direction = determine_direction(joyPosHorizontal);
+  digitalWrite(dir_pin,Direction);
+
+  
+//  calculate percentage change
+  int percentageChange = calculatePercentageChange(joyPosHorizontal, 512);
+  int moving  = speedControl(percentageChange);
+  digitalWrite(MS1_pin, MS_config[0]);
+  digitalWrite(MS2_pin, MS_config[1]);
+  digitalWrite(MS3_pin, MS_config[2]); 
+
+//  step to move the stepper motor
+// move only if the joystick is moving
+  if(moving){
+    digitalWrite(step_pin,HIGH);
+    delayMicroseconds(D);
+    digitalWrite(step_pin,LOW);
+    delayMicroseconds(D);  
+  }
+  
+  
 }
